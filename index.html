@@ -1,63 +1,169 @@
-<script>
-const params = new URLSearchParams(window.location.search);
-const code = params.get("code");
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewellery Details</title>
 
-if (!code) {
-    alert("QR Code not found.");
-    throw new Error("No QR code");
+<style>
+body{
+    font-family: Arial, Helvetica, sans-serif;
+    background:#f5f5f5;
+    margin:0;
+    padding:20px;
 }
 
-document.getElementById("raw").textContent = code;
+.container{
+    max-width:500px;
+    margin:auto;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.15);
+    padding:20px;
+}
 
-// Helper function
-function getValue(startMarker, endMarker) {
-    const start = code.indexOf(startMarker);
-    if (start === -1) return "";
+h2{
+    text-align:center;
+    color:#333;
+}
 
-    const from = start + startMarker.length;
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
 
-    if (!endMarker) {
-        return code.substring(from);
+td{
+    border:1px solid #ddd;
+    padding:10px;
+}
+
+td:first-child{
+    width:45%;
+    font-weight:bold;
+    background:#fafafa;
+}
+
+.raw{
+    margin-top:20px;
+    font-size:14px;
+    word-break:break-all;
+    color:#666;
+}
+
+.error{
+    color:red;
+    text-align:center;
+    font-weight:bold;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h2>Jewellery Details</h2>
+
+<div id="error" class="error"></div>
+
+<table>
+<tr><td>Shop</td><td id="shop"></td></tr>
+<tr><td>Vendor</td><td id="vendor"></td></tr>
+<tr><td>Category</td><td id="category"></td></tr>
+<tr><td>Sub Category</td><td id="subcategory"></td></tr>
+<tr><td>Weight</td><td id="weight"></td></tr>
+<tr><td>Retail MC</td><td id="retail"></td></tr>
+<tr><td>Wholesale MC</td><td id="wholesale"></td></tr>
+<tr><td>Stock MC</td><td id="stock"></td></tr>
+</table>
+
+<div class="raw">
+<b>QR Value:</b>
+<div id="raw"></div>
+</div>
+
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code");
+
+    if (!code) {
+        document.getElementById("error").textContent = "QR Code not found.";
+        return;
     }
 
-    const end = code.indexOf(endMarker, from);
-    if (end === -1) return "";
+    document.getElementById("raw").textContent = code;
 
-    return code.substring(from, end);
-}
+    function valueBetween(startMarker, endMarker) {
 
-// Extract values
-const shop = code.substring(0, code.indexOf("B"));
-const vendor = getValue("B", "C");
-const category = getValue("C", "U");
-const subCategory = getValue("U", "W");
-const weight = getValue("W", "RM");
-const retail = getValue("RM", "WM");
-const wholesale = getValue("WM", "SM");
-const stock = getValue("SM");
+        const start = code.indexOf(startMarker);
 
-// Mappings
-const categoryMap = {
-    "SS": "Sterling Silver"
-};
+        if(start === -1)
+            return "";
 
-const subCategoryMap = {
-    "KS": "Kids Stud"
-};
+        const from = start + startMarker.length;
 
-// Display
-document.getElementById("shop").textContent = shop;
-document.getElementById("vendor").textContent = vendor;
-document.getElementById("category").textContent =
-    categoryMap[category] || category;
+        if(!endMarker)
+            return code.substring(from);
 
-document.getElementById("subcategory").textContent =
-    subCategoryMap[subCategory] || subCategory;
+        const end = code.indexOf(endMarker, from);
 
-document.getElementById("weight").textContent =
-    (parseInt(weight) / 1000).toFixed(3) + " g";
+        if(end === -1)
+            return "";
 
-document.getElementById("retail").textContent = "₹ " + parseInt(retail);
-document.getElementById("wholesale").textContent = "₹ " + parseInt(wholesale);
-document.getElementById("stock").textContent = "₹ " + parseInt(stock);
+        return code.substring(from, end);
+    }
+
+    const shopEnd = code.indexOf("B");
+
+    if(shopEnd === -1){
+        document.getElementById("error").textContent="Invalid QR Code";
+        return;
+    }
+
+    const shop = code.substring(0, shopEnd);
+    const vendor = valueBetween("B","C");
+    const category = valueBetween("C","U");
+    const subCategory = valueBetween("U","W");
+    const weight = valueBetween("W","RM");
+    const retail = valueBetween("RM","WM");
+    const wholesale = valueBetween("WM","SM");
+    const stock = valueBetween("SM");
+
+    const categoryMap = {
+        "SS":"Sterling Silver"
+    };
+
+    const subCategoryMap = {
+        "KS":"Kids Stud"
+    };
+
+    document.getElementById("shop").textContent = shop;
+    document.getElementById("vendor").textContent = vendor;
+    document.getElementById("category").textContent =
+        categoryMap[category] || category;
+
+    document.getElementById("subcategory").textContent =
+        subCategoryMap[subCategory] || subCategory;
+
+    document.getElementById("weight").textContent =
+        weight ? (parseInt(weight)/1000).toFixed(3) + " g" : "";
+
+    document.getElementById("retail").textContent =
+        retail ? "₹ " + parseInt(retail) : "";
+
+    document.getElementById("wholesale").textContent =
+        wholesale ? "₹ " + parseInt(wholesale) : "";
+
+    document.getElementById("stock").textContent =
+        stock ? "₹ " + parseInt(stock) : "";
+
+});
 </script>
+
+</body>
+</html>
