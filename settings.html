@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Settings</title>
+</head>
+<body>
+
+<h2>Silver Price</h2>
+
+<input type="number" id="silverPrice" placeholder="Price per gram">
+
+<button onclick="save()">Save</button>
+
+<script>
+function save() {
+    const price = document.getElementById("silverPrice").value;
+
+    if(price == ""){
+        alert("Enter silver price");
+        return;
+    }
+
+    localStorage.setItem("silverPrice", price);
+
+    alert("Saved Successfully");
+}
+</script>
+
+</body>
+</html>
