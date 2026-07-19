@@ -1,191 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jewellery QR Details</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jewellery Details</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f5f5f5;
-            margin: 0;
-            padding: 20px;
-        }
+<style>
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f4f4;
+    margin:0;
+    padding:20px;
+}
+.container{
+    max-width:500px;
+    margin:auto;
+    background:#fff;
+    padding:20px;
+    border-radius:10px;
+    box-shadow:0 2px 10px rgba(0,0,0,.2);
+}
+h2{
+    text-align:center;
+    color:#333;
+}
+table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+}
+td{
+    border:1px solid #ddd;
+    padding:10px;
+}
+td:first-child{
+    font-weight:bold;
+    background:#f8f8f8;
+    width:45%;
+}
+.raw{
+    margin-top:20px;
+    word-break:break-all;
+    color:#666;
+    font-size:14px;
+}
+.price{
+    color:green;
+    font-weight:bold;
+    font-size:18px;
+}
+.warning{
+    color:red;
+    font-weight:bold;
+}
+</style>
 
-        .container {
-            max-width: 550px;
-            margin: auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,.15);
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        td {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-
-        td:first-child {
-            font-weight: bold;
-            background: #f8f8f8;
-            width: 45%;
-        }
-
-        .raw {
-            margin-top: 20px;
-            word-break: break-all;
-            color: #666;
-        }
-
-        .error {
-            color: red;
-            font-weight: bold;
-            text-align: center;
-            margin-bottom: 15px;
-        }
-    </style>
 </head>
 
 <body>
 
 <div class="container">
 
-    <h2>Jewellery QR Details</h2>
+<h2>Jewellery Details</h2>
 
-    <div id="error" class="error"></div>
+<table>
+<tr><td>Shop</td><td id="shop"></td></tr>
+<tr><td>Vendor</td><td id="vendor"></td></tr>
+<tr><td>Category</td><td id="category"></td></tr>
+<tr><td>Sub Category</td><td id="subcategory"></td></tr>
 
-    <table>
-        <tr>
-            <td>Shop</td>
-            <td id="shop"></td>
-        </tr>
-        <tr>
-            <td>Vendor</td>
-            <td id="vendor"></td>
-        </tr>
-        <tr>
-            <td>Category</td>
-            <td id="category"></td>
-        </tr>
-        <tr>
-            <td>Sub Category</td>
-            <td id="subcategory"></td>
-        </tr>
-        <tr>
-            <td>Weight</td>
-            <td id="weight"></td>
-        </tr>
-        <tr>
-            <td>Retail MC</td>
-            <td id="retail"></td>
-        </tr>
-        <tr>
-            <td>Wholesale MC</td>
-            <td id="wholesale"></td>
-        </tr>
-        <tr>
-            <td>Stock MC</td>
-            <td id="stock"></td>
-        </tr>
-    </table>
+<tr>
+    <td>Weight</td>
+    <td id="weight"></td>
+</tr>
 
-    <div class="raw">
-        <strong>QR Value</strong>
-        <div id="raw"></div>
-    </div>
+<tr>
+    <td>Silver Price / Gram</td>
+    <td id="silverPrice"></td>
+</tr>
+
+<tr>
+    <td>Retail Price</td>
+    <td id="retail" class="price"></td>
+</tr>
+
+<tr>
+    <td>Wholesale Price</td>
+    <td id="wholesale" class="price"></td>
+</tr>
+
+<tr>
+    <td>Stock Price</td>
+    <td id="stock" class="price"></td>
+</tr>
+
+</table>
+
+<div class="raw">
+<b>QR Value:</b>
+<div id="raw"></div>
+</div>
 
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
 
-    const params = new URLSearchParams(window.location.search);
-    const code = params.get("code");
+const params = new URLSearchParams(window.location.search);
+const code = params.get("code") || "";
 
-    if (!code) {
-        document.getElementById("error").textContent = "QR Code not found.";
-        return;
-    }
+document.getElementById("raw").textContent = code;
 
-    document.getElementById("raw").textContent = code;
+// Silver price from local storage
+const silverPrice = Number(localStorage.getItem("silverPrice") || 0);
 
-    function getValue(startMarker, endMarker) {
+if(silverPrice > 0){
+    document.getElementById("silverPrice").textContent =
+        "₹ " + silverPrice.toFixed(2);
+}else{
+    document.getElementById("silverPrice").innerHTML =
+        "<span class='warning'>Not Configured</span>";
+}
 
-        const start = code.indexOf(startMarker);
+if(code.length >= 37){
 
-        if (start === -1)
-            return "";
+    document.getElementById("shop").textContent = code.substring(0,2);
 
-        const from = start + startMarker.length;
+    document.getElementById("vendor").textContent = code.substring(3,6);
 
-        if (!endMarker)
-            return code.substring(from);
-
-        const end = code.indexOf(endMarker, from);
-
-        if (end === -1)
-            return "";
-
-        return code.substring(from, end);
-    }
-
-    const bIndex = code.indexOf("B");
-
-    if (bIndex === -1) {
-        document.getElementById("error").textContent = "Invalid QR Code";
-        return;
-    }
-
-    const shop = code.substring(0, bIndex);
-    const vendor = getValue("B", "C");
-    const category = getValue("C", "U");
-    const subCategory = getValue("U", "W");
-    const weight = getValue("W", "RM");
-    const retail = getValue("RM", "WM");
-    const wholesale = getValue("WM", "SM");
-    const stock = getValue("SM", null);
-
-    const categoryMap = {
-        SS: "Sterling Silver"
-    };
-
-    const subCategoryMap = {
-        KS: "Kids Stud"
-    };
-
-    document.getElementById("shop").textContent = shop;
-    document.getElementById("vendor").textContent = vendor;
     document.getElementById("category").textContent =
-        categoryMap[category] || category;
+        code.substring(7,9)=="SS"
+        ? "Sterling Silver"
+        : code.substring(7,9);
 
     document.getElementById("subcategory").textContent =
-        subCategoryMap[subCategory] || subCategory;
+        code.substring(10,12)=="KS"
+        ? "Kids Stud"
+        : code.substring(10,12);
+
+    // Weight in grams
+    const weight = parseInt(code.substring(14,20))/1000;
 
     document.getElementById("weight").textContent =
-        weight ? (Number(weight) / 1000).toFixed(3) + " g" : "";
+        weight.toFixed(3) + " g";
+
+    // Making Charges
+    const retailMC = parseInt(code.substring(22,26));
+    const wholesaleMC = parseInt(code.substring(28,32));
+    const stockMC = parseInt(code.substring(34,38));
+
+    // Metal Value
+    const metalValue = weight * silverPrice;
+
+    // Final Prices
+    const retailPrice = metalValue + retailMC;
+    const wholesalePrice = metalValue + wholesaleMC;
+    const stockPrice = metalValue + stockMC;
 
     document.getElementById("retail").textContent =
-        retail ? "₹ " + Number(retail) : "";
+        "₹ " + retailPrice.toFixed(2);
 
     document.getElementById("wholesale").textContent =
-        wholesale ? "₹ " + Number(wholesale) : "";
+        "₹ " + wholesalePrice.toFixed(2);
 
     document.getElementById("stock").textContent =
-        stock ? "₹ " + Number(stock) : "";
+        "₹ " + stockPrice.toFixed(2);
 
-});
+}
+else{
+    alert("Invalid QR Code");
+}
+
 </script>
 
 </body>
