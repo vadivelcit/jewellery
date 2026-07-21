@@ -94,7 +94,7 @@ td:first-child{
 
 const params = new URLSearchParams(window.location.search);
 const code = (params.get("c") || "").trim();
-
+alert("Received: " + code);
 document.getElementById("raw").textContent = code;
 
 const silverPrice = Number(localStorage.getItem("silverPrice") || 0);
