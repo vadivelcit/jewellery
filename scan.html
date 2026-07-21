@@ -79,31 +79,36 @@ Developed by EJ
 
 <script>
 
+let scanner;
+
 function onScanSuccess(decodedText) {
 
     scanner.clear();
 
     let qrValue = decodedText.trim();
 
-    // QR contains complete URL
-    if(qrValue.startsWith("http://") || qrValue.startsWith("https://")){
+    // If QR contains a URL, extract the code
+    if (qrValue.startsWith("http://") || qrValue.startsWith("https://")) {
 
-        try{
+        try {
 
             const url = new URL(qrValue);
 
-            qrValue = url.searchParams.get("c") || "";
+            qrValue =
+                url.searchParams.get("c") ||
+                url.searchParams.get("code") ||
+                "";
 
-        }catch(e){
+        } catch (e) {
 
             alert("Invalid QR URL");
             return;
         }
     }
 
-    if(qrValue.length !== 38){
+    if (!qrValue) {
 
-        alert("Invalid QR Code\n\n" + qrValue);
+        alert("QR data is empty.");
         return;
     }
 
@@ -111,33 +116,26 @@ function onScanSuccess(decodedText) {
         "index.html?c=" + encodeURIComponent(qrValue);
 }
 
-function onScanFailure(error){
-
+function onScanFailure(error) {
+    // Ignore scan failures
 }
 
-// Automatically use BACK camera
-const scanner = new Html5QrcodeScanner(
+scanner = new Html5QrcodeScanner(
     "reader",
     {
-        fps:10,
-        qrbox:{
-            width:250,
-            height:250
+        fps: 10,
+        qrbox: {
+            width: 250,
+            height: 250
         },
-        rememberLastUsedCamera:true,
-        supportedScanTypes:[Html5QrcodeScanType.SCAN_TYPE_CAMERA],
-        videoConstraints:{
-            facingMode:{
-                exact:"environment"
-            }
-        }
-    },
-    false
+        rememberLastUsedCamera: true,
+        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+    }
 );
 
-scanner.render(onScanSuccess,onScanFailure);
+scanner.render(onScanSuccess, onScanFailure);
 
 </script>
-
+    
 </body>
 </html>
