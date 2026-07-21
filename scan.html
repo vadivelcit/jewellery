@@ -92,7 +92,7 @@ function onScanSuccess(decodedText) {
 
             const url = new URL(qrValue);
 
-            qrValue = url.searchParams.get("code") || "";
+            qrValue = url.searchParams.get("c") || "";
 
         }catch(e){
 
@@ -108,7 +108,7 @@ function onScanSuccess(decodedText) {
     }
 
     window.location.href =
-        "index.html?code=" + encodeURIComponent(qrValue);
+        "index.html?c=" + encodeURIComponent(qrValue);
 }
 
 function onScanFailure(error){
