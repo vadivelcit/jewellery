@@ -1,31 +1,141 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Scan QR</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://unpkg.com/html5-qrcode"></script>
+<title>Jewellery QR Scanner</title>
+
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f4f4f4;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    min-height:100vh;
+}
+
+.container{
+    width:95%;
+    max-width:450px;
+    background:#fff;
+    border-radius:15px;
+    box-shadow:0 10px 30px rgba(0,0,0,.15);
+    padding:25px;
+    text-align:center;
+}
+
+h2{
+    color:#333;
+    margin-bottom:10px;
+}
+
+p{
+    color:#777;
+    margin-bottom:20px;
+    font-size:15px;
+}
+
+#reader{
+    width:100%;
+    margin:auto;
+}
+
+.footer{
+    margin-top:20px;
+    color:#888;
+    font-size:13px;
+}
+
+</style>
+
 </head>
+
 <body>
 
-<h2>Scan Jewellery QR</h2>
+<div class="container">
 
-<div id="reader" style="width:350px"></div>
+<h2>💍 Jewellery QR Scanner</h2>
+
+<p>Point your camera at the QR Code</p>
+
+<div id="reader"></div>
+
+<div class="footer">
+Developed by EJ
+</div>
+
+</div>
 
 <script>
 
 function onScanSuccess(decodedText) {
 
-    window.location =
-        "index.html?code=" + encodeURIComponent(decodedText);
+    scanner.clear();
+
+    let qrValue = decodedText.trim();
+
+    // QR contains complete URL
+    if(qrValue.startsWith("http://") || qrValue.startsWith("https://")){
+
+        try{
+
+            const url = new URL(qrValue);
+
+            qrValue = url.searchParams.get("code") || "";
+
+        }catch(e){
+
+            alert("Invalid QR URL");
+            return;
+        }
+    }
+
+    if(qrValue.length !== 38){
+
+        alert("Invalid QR Code\n\n" + qrValue);
+        return;
+    }
+
+    window.location.href =
+        "index.html?code=" + encodeURIComponent(qrValue);
 }
 
-new Html5QrcodeScanner(
+function onScanFailure(error){
+
+}
+
+// Automatically use BACK camera
+const scanner = new Html5QrcodeScanner(
     "reader",
     {
         fps:10,
-        qrbox:250
-    }
-).render(onScanSuccess);
+        qrbox:{
+            width:250,
+            height:250
+        },
+        rememberLastUsedCamera:true,
+        supportedScanTypes:[Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        videoConstraints:{
+            facingMode:{
+                exact:"environment"
+            }
+        }
+    },
+    false
+);
+
+scanner.render(onScanSuccess,onScanFailure);
 
 </script>
 
