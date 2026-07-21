@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Scan QR</title>
+
+    <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+
+<h2>Scan Jewellery QR</h2>
+
+<div id="reader" style="width:350px"></div>
+
+<script>
+
+function onScanSuccess(decodedText) {
+
+    window.location =
+        "index.html?code=" + encodeURIComponent(decodedText);
+}
+
+new Html5QrcodeScanner(
+    "reader",
+    {
+        fps:10,
+        qrbox:250
+    }
+).render(onScanSuccess);
+
+</script>
+
+</body>
+</html>
