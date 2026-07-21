@@ -12,46 +12,52 @@ body{
     margin:0;
     padding:20px;
 }
+
 .container{
     max-width:500px;
     margin:auto;
     background:#fff;
     padding:20px;
-    border-radius:10px;
-    box-shadow:0 2px 10px rgba(0,0,0,.2);
+    border-radius:12px;
+    box-shadow:0 2px 12px rgba(0,0,0,.15);
 }
+
 h2{
     text-align:center;
-    color:#333;
+    margin-bottom:20px;
 }
+
 table{
     width:100%;
     border-collapse:collapse;
-    margin-top:20px;
 }
+
 td{
     border:1px solid #ddd;
     padding:10px;
 }
+
 td:first-child{
-    font-weight:bold;
-    background:#f8f8f8;
     width:45%;
+    font-weight:bold;
+    background:#fafafa;
 }
+
+.price{
+    color:green;
+    font-weight:bold;
+}
+
+.warning{
+    color:red;
+    font-weight:bold;
+}
+
 .raw{
     margin-top:20px;
     word-break:break-all;
     color:#666;
-    font-size:14px;
-}
-.price{
-    color:green;
-    font-weight:bold;
-    font-size:18px;
-}
-.warning{
-    color:red;
-    font-weight:bold;
+    font-size:13px;
 }
 </style>
 
@@ -64,35 +70,16 @@ td:first-child{
 <h2>Jewellery Details</h2>
 
 <table>
+
 <tr><td>Shop</td><td id="shop"></td></tr>
 <tr><td>Vendor</td><td id="vendor"></td></tr>
 <tr><td>Category</td><td id="category"></td></tr>
 <tr><td>Sub Category</td><td id="subcategory"></td></tr>
-
-<tr>
-    <td>Weight</td>
-    <td id="weight"></td>
-</tr>
-
-<tr>
-    <td>Silver Price / Gram</td>
-    <td id="silverPrice"></td>
-</tr>
-
-<tr>
-    <td>Retail Price</td>
-    <td id="retail" class="price"></td>
-</tr>
-
-<tr>
-    <td>Wholesale Price</td>
-    <td id="wholesale" class="price"></td>
-</tr>
-
-<tr>
-    <td>Stock Price</td>
-    <td id="stock" class="price"></td>
-</tr>
+<tr><td>Weight</td><td id="weight"></td></tr>
+<tr><td>Silver Price / Gram</td><td id="silverPrice"></td></tr>
+<tr><td>Retail Price</td><td id="retail" class="price"></td></tr>
+<tr><td>Wholesale Price</td><td id="wholesale" class="price"></td></tr>
+<tr><td>Stock Price</td><td id="stock" class="price"></td></tr>
 
 </table>
 
@@ -106,69 +93,92 @@ td:first-child{
 <script>
 
 const params = new URLSearchParams(window.location.search);
-const code = params.get("c") || "";
+const code = (params.get("c") || "").trim();
 
 document.getElementById("raw").textContent = code;
 
-// Silver price from local storage
 const silverPrice = Number(localStorage.getItem("silverPrice") || 0);
 
-if(silverPrice > 0){
-    document.getElementById("silverPrice").textContent =
-        "₹ " + silverPrice.toFixed(2);
-}else{
-    document.getElementById("silverPrice").innerHTML =
-        "<span class='warning'>Not Configured</span>";
+document.getElementById("silverPrice").innerHTML =
+    silverPrice > 0
+    ? "₹ " + silverPrice.toFixed(2)
+    : "<span class='warning'>Not Configured</span>";
+
+function valueBetween(start,end){
+
+    const s = code.indexOf(start);
+
+    if(s === -1)
+        return "";
+
+    const from = s + start.length;
+
+    if(end == null)
+        return code.substring(from);
+
+    const e = code.indexOf(end,from);
+
+    if(e === -1)
+        return "";
+
+    return code.substring(from,e);
 }
 
-if(code.length >= 37){
+const valid =
+    code.startsWith("EJ") &&
+    code.includes("B") &&
+    code.includes("C") &&
+    code.includes("U") &&
+    code.includes("W") &&
+    code.includes("RM") &&
+    code.includes("WM") &&
+    code.includes("SM");
 
-    document.getElementById("shop").textContent = code.substring(0,2);
+if(!valid){
 
-    document.getElementById("vendor").textContent = code.substring(3,6);
-
-    document.getElementById("category").textContent =
-        code.substring(7,9)=="SS"
-        ? "Sterling Silver"
-        : code.substring(7,9);
-
-    document.getElementById("subcategory").textContent =
-        code.substring(10,12)=="KS"
-        ? "Kids Stud"
-        : code.substring(10,12);
-
-    // Weight in grams
-    const weight = parseInt(code.substring(14,20))/1000;
-
-    document.getElementById("weight").textContent =
-        weight.toFixed(3) + " g";
-
-    // Making Charges
-    const retailMC = parseInt(code.substring(22,26));
-    const wholesaleMC = parseInt(code.substring(28,32));
-    const stockMC = parseInt(code.substring(34,38));
-
-    // Metal Value
-    const metalValue = weight * silverPrice;
-
-    // Final Prices
-    const retailPrice = metalValue + retailMC;
-    const wholesalePrice = metalValue + wholesaleMC;
-    const stockPrice = metalValue + stockMC;
-
-    document.getElementById("retail").textContent =
-        "₹ " + retailPrice.toFixed(2);
-
-    document.getElementById("wholesale").textContent =
-        "₹ " + wholesalePrice.toFixed(2);
-
-    document.getElementById("stock").textContent =
-        "₹ " + stockPrice.toFixed(2);
-
-}
-else{
     alert("Invalid QR Code");
+
+    throw new Error("Invalid QR");
+
 }
+
+const shop = code.substring(0,code.indexOf("B"));
+const vendor = valueBetween("B","C");
+const category = valueBetween("C","U");
+const subCategory = valueBetween("U","W");
+
+const weight = Number(valueBetween("W","RM"))/1000;
+
+const retailMC = Number(valueBetween("RM","WM"));
+const wholesaleMC = Number(valueBetween("WM","SM"));
+const stockMC = Number(valueBetween("SM",null));
+
+document.getElementById("shop").textContent = shop;
+document.getElementById("vendor").textContent = vendor;
+
+document.getElementById("category").textContent =
+    category=="SS"
+    ? "Sterling Silver"
+    : category;
+
+document.getElementById("subcategory").textContent =
+    subCategory=="KS"
+    ? "Kids Stud"
+    : subCategory;
+
+document.getElementById("weight").textContent =
+    weight.toFixed(3)+" g";
+
+const metalValue = weight * silverPrice;
+
+document.getElementById("retail").textContent =
+    "₹ " + (metalValue + retailMC).toFixed(2);
+
+document.getElementById("wholesale").textContent =
+    "₹ " + (metalValue + wholesaleMC).toFixed(2);
+
+document.getElementById("stock").textContent =
+    "₹ " + (metalValue + stockMC).toFixed(2);
 
 </script>
 
