@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <title>Jewellery QR Scanner</title>
 
@@ -27,28 +28,25 @@ body{
 
 .container{
     width:95%;
-    max-width:450px;
+    max-width:480px;
     background:#fff;
     border-radius:15px;
+    padding:20px;
     box-shadow:0 10px 30px rgba(0,0,0,.15);
-    padding:25px;
     text-align:center;
 }
 
 h2{
-    color:#333;
     margin-bottom:10px;
 }
 
 p{
-    color:#777;
+    color:#666;
     margin-bottom:20px;
-    font-size:15px;
 }
 
 #reader{
     width:100%;
-    margin:auto;
 }
 
 .footer{
@@ -79,18 +77,24 @@ Developed by EJ
 
 <script>
 
-let scanner;
+const html5QrCode = new Html5Qrcode("reader");
 
-function onScanSuccess(decodedText) {
+let scanned = false;
 
-    scanner.clear();
+function onScanSuccess(decodedText){
+
+    if(scanned)
+        return;
+
+    scanned = true;
+
+    html5QrCode.stop();
 
     let qrValue = decodedText.trim();
 
-    // If QR contains a URL, extract the code
-    if (qrValue.startsWith("http://") || qrValue.startsWith("https://")) {
+    if(qrValue.startsWith("http://") || qrValue.startsWith("https://")){
 
-        try {
+        try{
 
             const url = new URL(qrValue);
 
@@ -99,43 +103,106 @@ function onScanSuccess(decodedText) {
                 url.searchParams.get("code") ||
                 "";
 
-        } catch (e) {
+        }catch(e){
 
             alert("Invalid QR URL");
+            scanned = false;
+            html5QrCode.start(cameraConfig, config, onScanSuccess);
             return;
         }
     }
 
-    if (!qrValue) {
+    if(!qrValue){
 
         alert("QR data is empty.");
+
+        scanned = false;
+
+        html5QrCode.start(cameraConfig, config, onScanSuccess);
+
         return;
     }
 
     window.location.href =
         "index.html?c=" + encodeURIComponent(qrValue);
+
 }
 
-function onScanFailure(error) {
-    // Ignore scan failures
-}
+const cameraConfig = {
 
-scanner = new Html5QrcodeScanner(
-    "reader",
-    {
-        fps: 10,
-        qrbox: {
-            width: 250,
-            height: 250
-        },
-        rememberLastUsedCamera: true,
-        supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA]
+    facingMode:{
+        ideal:"environment"
     }
-);
 
-scanner.render(onScanSuccess, onScanFailure);
+};
+
+const config = {
+
+    fps:20,
+
+    qrbox:function(viewfinderWidth,viewfinderHeight){
+
+        const size=Math.min(viewfinderWidth,viewfinderHeight)*0.9;
+
+        return{
+
+            width:size,
+            height:size
+
+        };
+
+    },
+
+    aspectRatio:1,
+
+    videoConstraints:{
+
+        width:{
+            ideal:1920
+        },
+
+        height:{
+            ideal:1080
+        },
+
+        facingMode:{
+            ideal:"environment"
+        }
+
+    }
+
+};
+
+Html5Qrcode.getCameras().then(cameras=>{
+
+    if(cameras && cameras.length){
+
+        let cameraId=cameras[0].id;
+
+        const back=cameras.find(c=>
+            c.label.toLowerCase().includes("back") ||
+            c.label.toLowerCase().includes("rear") ||
+            c.label.toLowerCase().includes("environment")
+        );
+
+        if(back)
+            cameraId=back.id;
+
+        html5QrCode.start(
+            cameraId,
+            config,
+            onScanSuccess
+        );
+
+    }
+
+}).catch(err=>{
+
+    alert("Unable to access camera");
+
+});
 
 </script>
-    
+
 </body>
 </html>
